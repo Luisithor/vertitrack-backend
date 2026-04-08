@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const sql = require('../config/db'); // Cambiamos pool por sql (nuestro archivo db.js con Neon)
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -10,7 +10,7 @@ exports.login = async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT * FROM usuarios WHERE usuario = ?', [usuario]);
+    const rows = await sql`SELECT * FROM "Usuarios" WHERE usuario = ${usuario}`;
     const user = rows[0];
 
     if (!user) {
@@ -23,18 +23,20 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id_usuario},
+      { id: user.id_usuario },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
     const nombreUsuario = `${user.nombre} ${user.apellido_paterno} ${user.apellido_materno || ''}`.trim();
 
-    res.json({ message: 'Autenticación exitosa', 
+    res.json({ 
+      message: 'Autenticación exitosa', 
       token, 
       rol: user.rol, 
       id_usuario: user.id_usuario,
-      nombre: nombreUsuario });
+      nombre: nombreUsuario 
+    });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });

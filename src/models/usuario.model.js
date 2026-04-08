@@ -2,7 +2,6 @@ const sql = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 async function getAllUsuarios() {
-  // Ponemos "Usuarios" entre comillas dobles
   const rows = await sql`SELECT * FROM "Usuarios"`; 
   return rows;
 }

@@ -1,63 +1,58 @@
-const pool = require("../config/db");
+const sql = require("../config/db"); 
 
 async function getClientes() {
-  const [rows] = await pool.query(`
-        SELECT * FROM Clientes
-        ORDER BY id_cliente DESC
-    `);
+  const rows = await sql`
+    SELECT * FROM "Clientes"
+    ORDER BY id_cliente DESC
+  `;
   return rows;
 }
 
 async function getClienteById(id) {
-  const [rows] = await pool.query(
-    `
-        SELECT * FROM Clientes
-        WHERE id_cliente = ?
-    `,
-    [id],
-  );
-
+  const rows = await sql`
+    SELECT * FROM "Clientes"
+    WHERE id_cliente = ${id}
+  `;
   return rows[0];
 }
 
 async function createCliente(data) {
   const { nombre_cliente, contacto, direccion } = data;
 
-  const [result] = await pool.query(
-    `
-        INSERT INTO Clientes (nombre_cliente, contacto, direccion)
-        VALUES (?, ?, ?)
-    `,
-    [nombre_cliente, contacto, direccion],
-  );
+  const result = await sql`
+    INSERT INTO "Clientes" (nombre_cliente, contacto, direccion)
+    VALUES (${nombre_cliente}, ${contacto}, ${direccion})
+    RETURNING id_cliente
+  `;
 
   return {
-    id_cliente: result.insertId,
+    id_cliente: result[0].id_cliente,
   };
 }
 
 async function updateCliente(id, data) {
   const { nombre_cliente, contacto, direccion } = data;
 
-  const [result] = await pool.query(
-    `
-        UPDATE Clientes
-        SET nombre_cliente = ?, 
-            contacto = ?, 
-            direccion = ?
-        WHERE id_cliente = ?
-    `,
-    [nombre_cliente, contacto, direccion, id],
-  );
-  return result.affectedRows > 0;
+  const result = await sql`
+    UPDATE "Clientes"
+    SET nombre_cliente = ${nombre_cliente}, 
+        contacto = ${contacto}, 
+        direccion = ${direccion}
+    WHERE id_cliente = ${id}
+    RETURNING id_cliente
+  `;
+  
+  return result.length > 0;
 }
 
 async function deleteCliente(id) {
-  const [result] = await pool.query("DELETE FROM Clientes WHERE id_cliente = ?", [
-    id,
-  ]);
+  const result = await sql`
+    DELETE FROM "Clientes" 
+    WHERE id_cliente = ${id}
+    RETURNING id_cliente
+  `;
 
-  return result.affectedRows > 0;
+  return result.length > 0;
 }
 
 module.exports = {
