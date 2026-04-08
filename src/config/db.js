@@ -1,11 +1,6 @@
-const mysql = require('mysql2/promise');
+const { neon } = require('@neondatabase/serverless');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-});
+const sql = neon(process.env.DATABASE_URL);
 
-module.exports = pool;
+module.exports = sql;
