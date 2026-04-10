@@ -1,8 +1,8 @@
-const sql = require("../config/db"); 
+const sql = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 async function getAllUsuarios() {
-  const rows = await sql`SELECT * FROM "Usuarios"`; 
+  const rows = await sql`SELECT * FROM "Usuarios"`;
   return rows;
 }
 
@@ -16,7 +16,15 @@ async function getUsuariosIdNombre() {
 }
 
 async function createUsuario(data) {
-  const requiredFields = ["nombre", "apellido_paterno", "fecha_nacimiento", "usuario", "correo", "telefono", "contrasena"];
+  const requiredFields = [
+    "nombre",
+    "apellido_paterno",
+    "fecha_nacimiento",
+    "usuario",
+    "correo",
+    "telefono",
+    "contrasena",
+  ];
   for (const field of requiredFields) {
     if (!data[field]) throw new Error(`El campo ${field} es obligatorio`);
   }
@@ -25,16 +33,9 @@ async function createUsuario(data) {
 
   const result = await sql`
     INSERT INTO "Usuarios" 
-    (nombre, apellido_paterno, apellido_materno, fecha_nacimiento, usuario, correo, telefono, contrasena) 
+    (nombre, apellido_paterno, apellido_materno, fecha_nacimiento, usuario, correo, telefono, contrasena, rol) 
     VALUES (
-      ${data.nombre}, 
-      ${data.apellido_paterno}, 
-      ${data.apellido_materno || null}, 
-      ${data.fecha_nacimiento}, 
-      ${data.usuario}, 
-      ${data.correo}, 
-      ${data.telefono}, 
-      ${hashedPassword}
+      ${data.nombre}, ..., ${data.rol || "Tecnico"} 
     ) 
     RETURNING id_usuario
   `;
@@ -43,24 +44,19 @@ async function createUsuario(data) {
 }
 
 async function updateUsuario(id, data) {
-  const hashedPassword = data.contrasena && data.contrasena.trim() !== "" 
-    ? await bcrypt.hash(data.contrasena, 10) 
-    : null;
+  const hashedPassword =
+    data.contrasena && data.contrasena.trim() !== ""
+      ? await bcrypt.hash(data.contrasena, 10)
+      : null;
 
   const result = await sql`
     UPDATE "Usuarios" SET
       nombre = ${data.nombre},
-      apellido_paterno = ${data.apellido_paterno},
-      apellido_materno = ${data.apellido_materno || null},
-      fecha_nacimiento = ${data.fecha_nacimiento},
-      usuario = ${data.usuario},
-      correo = ${data.correo},
-      telefono = ${data.telefono},
-      contrasena = ${hashedPassword ? hashedPassword : sql`contrasena`} 
+      ...,
+      rol = ${data.rol} 
     WHERE id_usuario = ${id}
     RETURNING id_usuario
   `;
-
   return result.length > 0;
 }
 
@@ -78,5 +74,5 @@ module.exports = {
   getUsuariosIdNombre,
   createUsuario,
   updateUsuario,
-  deleteUsuario
+  deleteUsuario,
 };
