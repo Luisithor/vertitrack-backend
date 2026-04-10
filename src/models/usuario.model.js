@@ -16,15 +16,8 @@ async function getUsuariosIdNombre() {
 }
 
 async function createUsuario(data) {
-  const requiredFields = [
-    "nombre",
-    "apellido_paterno",
-    "fecha_nacimiento",
-    "usuario",
-    "correo",
-    "telefono",
-    "contrasena",
-  ];
+  const requiredFields = ["nombre", "apellido_paterno", "fecha_nacimiento", "usuario", "correo", "telefono", "contrasena", "rol"];
+  
   for (const field of requiredFields) {
     if (!data[field]) throw new Error(`El campo ${field} es obligatorio`);
   }
@@ -35,7 +28,15 @@ async function createUsuario(data) {
     INSERT INTO "Usuarios" 
     (nombre, apellido_paterno, apellido_materno, fecha_nacimiento, usuario, correo, telefono, contrasena, rol) 
     VALUES (
-      ${data.nombre}, ..., ${data.rol || "Tecnico"} 
+      ${data.nombre}, 
+      ${data.apellido_paterno}, 
+      ${data.apellido_materno || null}, 
+      ${data.fecha_nacimiento}, 
+      ${data.usuario}, 
+      ${data.correo}, 
+      ${data.telefono}, 
+      ${hashedPassword},
+      ${data.rol}
     ) 
     RETURNING id_usuario
   `;
