@@ -92,10 +92,12 @@ exports.actualizarToken = async (req, res) => {
         .json({ error: "ID de usuario y token son requeridos" });
     }
 
-    const ok = await Usuario.updateTokenPush(id_usuario, token_push);
+    const idNumerico = Number(id_usuario);
+
+    const ok = await Usuario.updateTokenPush(idNumerico, token_push);
 
     if (!ok) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+      return res.status(404).json({ error: `Usuario con ID ${idNumerico} no encontrado` });
     }
 
     res.json({ message: "Token push actualizado correctamente" });
