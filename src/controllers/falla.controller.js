@@ -1,4 +1,6 @@
 const Falla = require("../models/falla.model");
+const Usuario = require("../models/usuario.model"); // Necesitas acceso a los tokens
+const admin = require("firebase-admin");
 
 exports.getFallas = async (req, res) => {
   try {
@@ -25,35 +27,59 @@ exports.getFallaById = async (req, res) => {
   }
 };
 
-exports.createFalla = async (req, res) => {
+const notificarTecnicos = async (fallaData) => {
   try {
-    // CORRECCIÓN: Extraemos las variables del body antes de validarlas
-    const { id_elevador, tipo_falla } = req.body;
+    if (fallaData.urgencia !== "Crítica" && fallaData.urgencia !== "Alta")
+      return;
 
-    if (!id_elevador || !tipo_falla) {
-      return res.status(400).json({
-        error: "Faltan campos obligatorios (id_elevador, tipo_falla)",
-      });
-    }
+const usuariosConToken = await Usuario.getTokensActivos(); // Usa el nombre correcto del modelo
 
-    const id = await Falla.createFalla(req.body);
+    if (!usuariosConToken || usuariosConToken.length === 0) return;
 
-    res.status(201).json({
-      message: "Reporte creado",
-      id,
-    });
+    const tokens = usuariosConToken.map((u) => u.token_push).filter((t) => t);
+
+    const message = {
+      notification: {
+        title: `FALLA ${fallaData.urgencia.toUpperCase()}`,
+        body: `${fallaData.tipo_falla} - Revisar Vertitrack PWA`,
+      },
+      data: {
+        click_action: "FLUTTER_NOTIFICATION_CLICK",
+        url: "/fallas",
+      },
+      tokens: tokens,
+    };
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log(`Notificaciones enviadas: ${response.successCount}`);
   } catch (error) {
-    console.error("Error en createFalla:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Error al enviar notificaciones push:", error);
   }
 };
 
+exports.createFalla = async (req, res) => {
+  try {
+    const id = await Falla.createFalla(req.body);
+
+    if (req.body.urgencia === "Crítica" || req.body.urgencia === "Alta") {
+      notificarTecnicos(req.body); 
+    }
+
+    res.status(201).json({ message: "Reporte creado", id });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 exports.updateFalla = async (req, res) => {
   try {
     const ok = await Falla.updateFalla(req.params.id, req.body);
 
     if (!ok) {
       return res.status(404).json({ error: "Falla no encontrada" });
+    }
+
+    if (req.body.urgencia === "Crítica") {
+      notificarTecnicos(req.body);
     }
 
     res.json({ message: "Reporte actualizado" });

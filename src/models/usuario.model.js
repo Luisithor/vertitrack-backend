@@ -53,8 +53,14 @@ async function updateUsuario(id, data) {
   const result = await sql`
     UPDATE "Usuarios" SET
       nombre = ${data.nombre},
-      ...,
-      rol = ${data.rol} 
+      apellido_paterno = ${data.apellido_paterno},
+      apellido_materno = ${data.apellido_materno || null},
+      fecha_nacimiento = ${data.fecha_nacimiento},
+      usuario = ${data.usuario},
+      correo = ${data.correo},
+      telefono = ${data.telefono},
+      contrasena = ${hashedPassword},
+      rol = ${data.rol}
     WHERE id_usuario = ${id}
     RETURNING id_usuario
   `;
@@ -69,6 +75,26 @@ async function deleteUsuario(id) {
   return result.length > 0;
 }
 
+async function updateTokenPush(id, token) {
+  const result = await sql`
+    UPDATE "Usuarios" 
+    SET token_push = ${token} 
+    WHERE id_usuario = ${id}
+    RETURNING id_usuario
+  `;
+  return result.length > 0;
+}
+
+async function getTokensActivos() {
+  const rows = await sql`
+    SELECT token_push 
+    FROM "Usuarios" 
+    WHERE token_push IS NOT NULL 
+    AND (rol = 'admin' OR rol = 'tecnico')
+  `;
+  return rows;
+}
+
 module.exports = {
   getAllUsuarios,
   getUsuarioById,
@@ -76,4 +102,6 @@ module.exports = {
   createUsuario,
   updateUsuario,
   deleteUsuario,
+  updateTokenPush,
+  getTokensActivos
 };

@@ -1,6 +1,5 @@
 const Usuario = require("../models/usuario.model");
 
-// GET /api/usuarios/lista
 exports.getUsuarios = async (req, res) => {
   try {
     const usuarios = await Usuario.getAllUsuarios();
@@ -11,7 +10,6 @@ exports.getUsuarios = async (req, res) => {
   }
 };
 
-// GET /api/usuarios/consulta/:id
 exports.getUsuarioById = async (req, res) => {
   try {
     const usuario = await Usuario.getUsuarioById(req.params.id);
@@ -25,7 +23,6 @@ exports.getUsuarioById = async (req, res) => {
   }
 };
 
-// GET /api/usuarios/listado-simple
 exports.listarUsuariosIdNombre = async (req, res) => {
   try {
     const usuarios = await Usuario.getUsuariosIdNombre();
@@ -36,13 +33,12 @@ exports.listarUsuariosIdNombre = async (req, res) => {
   }
 };
 
-// POST /api/usuarios/crear
 exports.createUsuario = async (req, res) => {
   try {
     const id = await Usuario.createUsuario(req.body);
     res.status(201).json({
       message: "Usuario creado correctamente",
-      id
+      id,
     });
   } catch (error) {
     console.error("Error al crear usuario:", error);
@@ -50,7 +46,6 @@ exports.createUsuario = async (req, res) => {
   }
 };
 
-// PUT /api/usuarios/actualizar/:id
 exports.updateUsuario = async (req, res) => {
   try {
     const ok = await Usuario.updateUsuario(req.params.id, req.body);
@@ -64,17 +59,16 @@ exports.updateUsuario = async (req, res) => {
   }
 };
 
-// POST /api/usuarios/cambiar-rol
 exports.solicitudCambioRol = async (req, res) => {
   try {
-    // Aquí podrías implementar la lógica de cambio de rol si tienes el campo en la BD
-    res.json({ message: "Funcionalidad de cambio de rol pendiente de implementación" });
+    res.json({
+      message: "Funcionalidad de cambio de rol pendiente de implementación",
+    });
   } catch (error) {
     res.status(500).json({ error: "Error al procesar cambio de rol" });
   }
 };
 
-// DELETE /api/usuarios/eliminar/:id
 exports.deleteUsuario = async (req, res) => {
   try {
     const ok = await Usuario.deleteUsuario(req.params.id);
@@ -85,5 +79,28 @@ exports.deleteUsuario = async (req, res) => {
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
     res.status(500).json({ error: "Error al eliminar el usuario" });
+  }
+};
+
+exports.actualizarToken = async (req, res) => {
+  try {
+    const { id_usuario, token_push } = req.body;
+
+    if (!id_usuario || !token_push) {
+      return res
+        .status(400)
+        .json({ error: "ID de usuario y token son requeridos" });
+    }
+
+    const ok = await Usuario.updateTokenPush(id_usuario, token_push);
+
+    if (!ok) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ message: "Token push actualizado correctamente" });
+  } catch (error) {
+    console.error("Error al actualizar token push:", error);
+    res.status(500).json({ error: "Error interno al guardar token" });
   }
 };
