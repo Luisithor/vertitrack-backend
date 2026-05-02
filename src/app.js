@@ -7,15 +7,16 @@ const path = require("path");
 const app = express();
 
 try {
-  const serviceAccount = require("./config/vertitrack-service-account.json");
+  const serviceAccount = require(
+    path.join(__dirname, "..", "vertitrack-service-account.json"),
+  );
 
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
   });
   console.log("🔥 Firebase Admin inicializado correctamente");
 } catch (error) {
   console.error("❌ Error al inicializar Firebase Admin:", error.message);
-  // No detenemos el servidor, pero las notificaciones no funcionarán
 }
 
 // --- MIDDLEWARES ---
@@ -41,7 +42,7 @@ app.get("/", async (req, res) => {
 // --- MANEJO DE ERRORES GLOBAL ---
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Algo salió mal en el servidor' });
+  res.status(500).json({ error: "Algo salió mal en el servidor" });
 });
 
 const PORT = process.env.PORT || 3000;
